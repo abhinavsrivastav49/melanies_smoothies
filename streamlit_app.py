@@ -19,6 +19,9 @@ my_dataframe = session.table("smoothies.public.fruit_options").select(col('Fruit
 # Convert Snowflake data to pandas DataFrame for easier handling
 pd_df = pd.DataFrame([row.as_dict() for row in my_dataframe.collect()])  # Convert to DataFrame
 
+# Debugging step: Print the columns of the DataFrame to check if 'SEARCH_ON' exists
+st.write("Columns in DataFrame:", pd_df.columns)
+
 # Get the list of fruits from the DataFrame
 fruit_list = pd_df['FRUIT_NAME'].tolist()
 
@@ -90,13 +93,15 @@ if ingredients_list:
                         else:
                             st.warning(f"No nutritional information found for {fruit_chosen}.")
                         
-                        # Additional command to display search value for the chosen fruit
-                        try:
-                            # Search for the 'SEARCH_ON' value associated with the chosen fruit
-                            search_on = pd_df.loc[pd_df['FRUIT_NAME'] == fruit_chosen, 'SEARCH_ON'].iloc[0]
-                            st.write(f'The search value for {fruit_chosen} is {search_on}.')
-                        except IndexError:
-                            st.warning(f"No 'SEARCH_ON' value found for {fruit_chosen}.")
+                        # Check if 'SEARCH_ON' exists in the DataFrame
+                        if 'SEARCH_ON' in pd_df.columns:
+                            try:
+                                search_on = pd_df.loc[pd_df['FRUIT_NAME'] == fruit_chosen, 'SEARCH_ON'].iloc[0]
+                                st.write(f'The search value for {fruit_chosen} is {search_on}.')
+                            except IndexError:
+                                st.warning(f"No 'SEARCH_ON' value found for {fruit_chosen}.")
+                        else:
+                            st.warning("'SEARCH_ON' column is missing in the data.")
                     else:
                         st.warning(f"Unexpected response format for {fruit_chosen}. Missing 'nutrition' data.")
                 except Exception as e:
