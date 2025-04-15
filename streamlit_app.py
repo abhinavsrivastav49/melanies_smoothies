@@ -15,12 +15,12 @@ st.write("The name on your smoothie will be:", name_on_order)
 cnx = st.connection("snowflake")
 session = cnx.session()
 my_dataframe = session.table("smoothies.public.fruit_options").select(col('Fruit_Name'))
-fruit_list = [row["FRUIT_NAME"] for row in my_dataframe.collect()]  # Extract values for multiselect
+fruit_list = [row["FRUIT_NAME"] for row in my_dataframe.collect()]  # Extract values
 
-# Multiselect box
+# Multiselect for ingredients
 ingredients_list = st.multiselect("Choose up to 5 ingredients:", fruit_list, max_selections=5)
 
-# Submit logic
+# Handle order submission
 if ingredients_list:
     ingredients_string = ", ".join(ingredients_list)
 
@@ -33,7 +33,7 @@ if ingredients_list:
         session.sql(my_insert_stmt).collect()
         st.success(f"Your smoothie has been ordered, {name_on_order}!", icon="✅")
 
-        # Fetch and display nutrition info for each fruit
+        # Fetch and display nutrition info per fruit
         for fruit_chosen in ingredients_list:
             smoothiefroot_response = requests.get(f"https://my.smoothiefroot.com/api/fruit/{fruit_chosen}")
 
@@ -41,14 +41,31 @@ if ingredients_list:
                 try:
                     json_data = smoothiefroot_response.json()
                     st.subheader(f"{fruit_chosen} Nutrition Information")
-                    
-                    if isinstance(json_data, dict):
-                        st.table([json_data])  # wrap in list to render single-row table
-                    elif isinstance(json_data, list):
-                        st.table(json_data)
+
+                    # Ensure data is a list
+                    if isinstance(json_data, list) and len(json_data) > 0:
+                        fruit_data = json_data[0]
+
+                        # Extract nutrition values (e.g., carbs, fat)
+                        nutrients = ['carbs', 'fat', 'protein', 'calories']
+                        rows = []
+
+                        for nutrient in nutrients:
+                            if nutrient in fruit_data:
+                                row = {
+                                    "Nutrient": nutrient,
+                                    "Family": fruit_data.get("family", ""),
+                                    "Genus": fruit_data.get("genus", ""),
+                                    "ID": fruit_data.get("id", ""),
+                                    "Name": fruit_data.get("name", ""),
+                                    "Nutrition": fruit_data[nutrient],
+                                    "Order": fruit_data.get("order", "")
+                                }
+                                rows.append(row)
+
+                        if rows:
+                            st.table(rows)
+                        else:
+                            st.warning(f"No recognizable nutrients found for {fruit_chosen}.")
                     else:
-                        st.warning(f"Unexpected data format for {fruit_chosen}.")
-                except Exception as e:
-                    st.error(f"Error parsing nutrition info for {fruit_chosen}: {e}")
-            else:
-                st.error(f"Failed to fetch nutrition info for {fruit_chosen}.")
+                        st.warning
