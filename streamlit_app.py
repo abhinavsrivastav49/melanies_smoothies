@@ -17,10 +17,10 @@ session = cnx.session()
 my_dataframe = session.table("smoothies.public.fruit_options").select(col('Fruit_Name'))
 
 # Convert Snowflake data to pandas DataFrame for easier handling
-fruit_df = pd.DataFrame([row.as_dict() for row in my_dataframe.collect()])  # Convert to DataFrame
+pd_df = pd.DataFrame([row.as_dict() for row in my_dataframe.collect()])  # Convert to DataFrame
 
 # Get the list of fruits from the DataFrame
-fruit_list = fruit_df['FRUIT_NAME'].tolist()
+fruit_list = pd_df['FRUIT_NAME'].tolist()
 
 # Multiselect for ingredients
 ingredients_list = st.multiselect("Choose up to 5 ingredients:", fruit_list, max_selections=5)
@@ -89,6 +89,14 @@ if ingredients_list:
                             st.table(nutrition_df)
                         else:
                             st.warning(f"No nutritional information found for {fruit_chosen}.")
+                        
+                        # Additional command to display search value for the chosen fruit
+                        try:
+                            # Search for the 'SEARCH_ON' value associated with the chosen fruit
+                            search_on = pd_df.loc[pd_df['FRUIT_NAME'] == fruit_chosen, 'SEARCH_ON'].iloc[0]
+                            st.write(f'The search value for {fruit_chosen} is {search_on}.')
+                        except IndexError:
+                            st.warning(f"No 'SEARCH_ON' value found for {fruit_chosen}.")
                     else:
                         st.warning(f"Unexpected response format for {fruit_chosen}. Missing 'nutrition' data.")
                 except Exception as e:
