@@ -41,8 +41,19 @@ if time_to_insert:
     session.sql(my_insert_stmt, [ingredients_string.strip(), name_on_order]).collect()
     st.success(f"Your smoothie has been ordered, {name_on_order}!", icon="✅")
     
-            st.success(f"Your smoothie has been ordered, {name_on_order}!", icon="✅")
+    
 
 
-        smoothiefroot_response = requests.get("https://my.smoothiefroot.com/api/fruit/watermelon")
-        st_df = st.dataframe(data = smoothiefroot_response.json(), use_container_width=True)
+        smoothiefroot_response = requests.get(f"https://my.smoothiefroot.com/api/fruit/{fruit_chosen}")
+
+if smoothiefroot_response.headers.get('Content-Type') == 'application/json':
+    try:
+        json_data = smoothiefroot_response.json()
+        if isinstance(json_data, list) or isinstance(json_data, dict):  # Check if the response is valid
+            st.dataframe(data=pd.DataFrame(json_data), use_container_width=True)
+        else:
+            st.error(f"Could not display nutrition info for {fruit_chosen}. Unexpected format.")
+    except ValueError:
+        st.error(f"Invalid JSON response for {fruit_chosen}.")
+else:
+    st.error(f"Failed to fetch nutrition info for {fruit_chosen}.")
