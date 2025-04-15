@@ -35,41 +35,44 @@ if ingredients_list:
 
         # Fetch and display nutrition info per fruit
         for fruit_chosen in ingredients_list:
-            smoothiefroot_response = requests.get(f"https://my.smoothiefroot.com/api/fruit/{fruit_chosen}")
+            response = requests.get(f"https://my.smoothiefroot.com/api/fruit/{fruit_chosen}")
 
-            if smoothiefroot_response.status_code == 200:
+            if response.status_code == 200:
                 try:
-                    json_data = smoothiefroot_response.json()
-                    st.subheader(f"{fruit_chosen} Nutrition Information")
+                    data = response.json()
 
-                    # Ensure data is a list
-                    if isinstance(json_data, list) and len(json_data) > 0:
-                        fruit_data = json_data[0]
+                    # Ensure data is a dictionary
+                    if isinstance(data, dict):
+                        st.subheader(f"{fruit_chosen} Nutrition Information")
 
-                        # Extract nutrition values (e.g., carbs, fat)
-                        nutrients = ['carbs', 'fat', 'protein', 'calories']
+                        # Extract metadata
+                        metadata = {
+                            "Family": data.get("family", ""),
+                            "Genus": data.get("genus", ""),
+                            "ID": data.get("id", ""),
+                            "Name": data.get("name", ""),
+                            "Order": data.get("order", "")
+                        }
+
+                        # Extract nutrients
+                        nutrients = ["carbs", "fat", "protein", "calories"]
                         rows = []
 
                         for nutrient in nutrients:
-                            if nutrient in fruit_data:
+                            if nutrient in data:
                                 row = {
-                                    "Nutrient": nutrient,
-                                    "Family": fruit_data.get("family", ""),
-                                    "Genus": fruit_data.get("genus", ""),
-                                    "ID": fruit_data.get("id", ""),
-                                    "Name": fruit_data.get("name", ""),
-                                    "Nutrition": fruit_data[nutrient],
-                                    "Order": fruit_data.get("order", "")
+                                    "Nutrient": nutrient.capitalize(),
+                                    "Value": data[nutrient],
+                                    **metadata
                                 }
                                 rows.append(row)
 
                         if rows:
                             st.table(rows)
                         else:
-                            st.warning(f"No recognizable nutrients found for {fruit_chosen}.")
+                            st.warning(f"No nutritional information found for {fruit_chosen}.")
                     else:
                         st.warning(f"Unexpected response format for {fruit_chosen}.")
-
                 except Exception as e:
                     st.error(f"Error parsing data for {fruit_chosen}: {e}")
             else:
