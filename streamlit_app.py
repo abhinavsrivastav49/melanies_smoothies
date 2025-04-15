@@ -1,6 +1,7 @@
 import streamlit as st
 from snowflake.snowpark.functions import col
 import requests
+import pandas as pd  # Import pandas as pd
 
 # Streamlit App Title
 st.title(":cup_with_straw: Customize Your Smoothie :cup_with_straw:")
@@ -13,8 +14,13 @@ st.write("The name on your smoothie will be:", name_on_order)
 # Snowflake connection (use correct connection settings)
 cnx = st.connection("snowflake")
 session = cnx.session()
-my_dataframe = session.table("smoothies.public.fruit_options").select(col('search_on'))
-fruit_list = [row["FRUIT_NAME"] for row in my_dataframe.collect()]  # Extract values
+my_dataframe = session.table("smoothies.public.fruit_options").select(col('Fruit_Name'))
+
+# Convert Snowflake data to pandas DataFrame for easier handling
+fruit_df = pd.DataFrame([row.as_dict() for row in my_dataframe.collect()])  # Convert to DataFrame
+
+# Get the list of fruits from the DataFrame
+fruit_list = fruit_df['FRUIT_NAME'].tolist()
 
 # Multiselect for ingredients
 ingredients_list = st.multiselect("Choose up to 5 ingredients:", fruit_list, max_selections=5)
@@ -69,12 +75,18 @@ if ingredients_list:
                                 # Add metadata as columns
                                 for key, value in metadata.items():
                                     row[key] = value
+                                
+                                # Add a new column (e.g., "Source")
+                                row["Source"] = "SmoothieFroot API"  # Static value for now
+                                
                                 rows.append(row)
 
-                        # Display nutrition info in a transposed table (nutrients in rows, metadata in columns)
-                        if rows:
-                            # Show the table with nutrients in rows and metadata in columns
-                            st.table(rows)
+                        # Convert the rows to a pandas DataFrame for easier display
+                        nutrition_df = pd.DataFrame(rows)
+
+                        # Display nutrition info as a table using pandas DataFrame
+                        if not nutrition_df.empty:
+                            st.table(nutrition_df)
                         else:
                             st.warning(f"No nutritional information found for {fruit_chosen}.")
                     else:
