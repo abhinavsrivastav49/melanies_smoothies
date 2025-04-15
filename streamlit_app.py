@@ -44,8 +44,8 @@ if ingredients_list:
                     # Debugging output: print raw response to check data structure
                     st.write(f"Raw data for {fruit_chosen}:", data)
 
-                    # Ensure data is a dictionary
-                    if isinstance(data, dict):
+                    # Ensure data is a dictionary and contains "nutrition" key
+                    if isinstance(data, dict) and "nutrition" in data:
                         st.subheader(f"{fruit_chosen} Nutrition Information")
 
                         # Extract metadata (if available)
@@ -57,26 +57,31 @@ if ingredients_list:
                             "Order": data.get("order", "N/A")
                         }
 
-                        # Extract nutrients (ensure keys exist)
-                        nutrients = ["carbs", "fat", "protein", "calories"]
+                        # Extract nutrients from the nested "nutrition" key
+                        nutrition_data = data.get("nutrition", {})
+                        nutrients = ["carbs", "fat", "protein", "sugar"]  # sugar included as well
+                        
+                        # Prepare rows where nutrients will be shown in rows, and metadata in columns
                         rows = []
-
                         for nutrient in nutrients:
-                            if nutrient in data:
+                            if nutrient in nutrition_data:
                                 row = {
                                     "Nutrient": nutrient.capitalize(),
-                                    "Value": data[nutrient],
-                                    **metadata
+                                    "Value": nutrition_data[nutrient]
                                 }
+                                # Add metadata as columns
+                                for key, value in metadata.items():
+                                    row[key] = value
                                 rows.append(row)
 
-                        # Display nutrition info in a table
+                        # Display nutrition info in a transposed table (nutrients in rows, metadata in columns)
                         if rows:
+                            # Show the table with nutrients in rows and metadata in columns
                             st.table(rows)
                         else:
                             st.warning(f"No nutritional information found for {fruit_chosen}.")
                     else:
-                        st.warning(f"Unexpected response format for {fruit_chosen}.")
+                        st.warning(f"Unexpected response format for {fruit_chosen}. Missing 'nutrition' data.")
                 except Exception as e:
                     st.error(f"Error parsing data for {fruit_chosen}: {e}")
             else:
