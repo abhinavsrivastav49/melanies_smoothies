@@ -68,4 +68,9 @@ if ingredients_list:
                         else:
                             st.warning(f"No recognizable nutrients found for {fruit_chosen}.")
                     else:
-                        st.warning
+                        st.warning(f"Unexpected response format for {fruit_chosen}.")
+
+                except Exception as e:
+                    st.error(f"Error parsing data for {fruit_chosen}: {e}")
+            else:
+                st.error(f"Failed to fetch nutrition info for {fruit_chosen}.")
