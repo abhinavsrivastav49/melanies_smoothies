@@ -41,9 +41,6 @@ if ingredients_list:
                 try:
                     data = response.json()
 
-                    # Debugging output: print raw response to check data structure
-                    st.write(f"Raw data for {fruit_chosen}:", data)
-
                     # Ensure data is a dictionary and contains "nutrition" key
                     if isinstance(data, dict) and "nutrition" in data:
                         st.subheader(f"{fruit_chosen} Nutrition Information")
