@@ -44,7 +44,7 @@ if time_to_insert:
     
 
 
-        smoothiefroot_response = requests.get(f"https://my.smoothiefroot.com/api/fruit/{fruit_chosen}")
+smoothiefroot_response = requests.get(f"https://my.smoothiefroot.com/api/fruit/{fruit_chosen}")
 
 if smoothiefroot_response.headers.get('Content-Type') == 'application/json':
     try:
