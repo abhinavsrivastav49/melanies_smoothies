@@ -29,17 +29,17 @@ if ingredients_list:
 
     ingredients_string =''
 
-    for fruit_chosen in ingredients_list:
-        ingredients_string += fruit_chosen + ' '
-        #st.write(ingredients_string)
+    # Construct the ingredients string inside the loop
+for fruit_chosen in ingredients_list:
+    ingredients_string += fruit_chosen + ' '
 
+# Move the SQL query and button outside the loop
+my_insert_stmt = "INSERT INTO smoothies.public.orders (ingredients, name_on_order) VALUES (%s, %s)"
+time_to_insert = st.button('Submit Order')
 
-        my_insert_stmt = """ insert into smoothies.public.orders(ingredients,name_on_order)
-            values ('""" + ingredients_string + """','""" + name_on_order + """')"""
-
-        #st.write(my_insert_stmt)
-    
-        time_to_insert = st.button('Submit Order')
+if time_to_insert:
+    session.sql(my_insert_stmt, [ingredients_string.strip(), name_on_order]).collect()
+    st.success(f"Your smoothie has been ordered, {name_on_order}!", icon="✅")
 
         if time_to_insert:
             session.sql(my_insert_stmt).collect()
