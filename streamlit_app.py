@@ -1,4 +1,3 @@
-# Import required packages
 import streamlit as st
 from snowflake.snowpark.functions import col
 import requests
@@ -11,7 +10,7 @@ st.write("Choose the fruits you want in your custom smoothie!")
 name_on_order = st.text_input("Name on Smoothie:")
 st.write("The name on your smoothie will be:", name_on_order)
 
-# Snowflake connection
+# Snowflake connection (use correct connection settings)
 cnx = st.connection("snowflake")
 session = cnx.session()
 my_dataframe = session.table("smoothies.public.fruit_options").select(col('Fruit_Name'))
@@ -35,26 +34,30 @@ if ingredients_list:
 
         # Fetch and display nutrition info per fruit
         for fruit_chosen in ingredients_list:
+            # Fetching the data from the API
             response = requests.get(f"https://my.smoothiefroot.com/api/fruit/{fruit_chosen}")
 
             if response.status_code == 200:
                 try:
                     data = response.json()
 
+                    # Debugging output: print raw response to check data structure
+                    st.write(f"Raw data for {fruit_chosen}:", data)
+
                     # Ensure data is a dictionary
                     if isinstance(data, dict):
                         st.subheader(f"{fruit_chosen} Nutrition Information")
 
-                        # Extract metadata
+                        # Extract metadata (if available)
                         metadata = {
-                            "Family": data.get("family", ""),
-                            "Genus": data.get("genus", ""),
-                            "ID": data.get("id", ""),
-                            "Name": data.get("name", ""),
-                            "Order": data.get("order", "")
+                            "Family": data.get("family", "N/A"),
+                            "Genus": data.get("genus", "N/A"),
+                            "ID": data.get("id", "N/A"),
+                            "Name": data.get("name", "N/A"),
+                            "Order": data.get("order", "N/A")
                         }
 
-                        # Extract nutrients
+                        # Extract nutrients (ensure keys exist)
                         nutrients = ["carbs", "fat", "protein", "calories"]
                         rows = []
 
@@ -67,6 +70,7 @@ if ingredients_list:
                                 }
                                 rows.append(row)
 
+                        # Display nutrition info in a table
                         if rows:
                             st.table(rows)
                         else:
@@ -76,4 +80,4 @@ if ingredients_list:
                 except Exception as e:
                     st.error(f"Error parsing data for {fruit_chosen}: {e}")
             else:
-                st.error(f"Failed to fetch nutrition info for {fruit_chosen}.")
+                st.error(f"Failed to fetch nutrition info for {fruit_chosen}. HTTP status: {response.status_code}")
